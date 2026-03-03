@@ -1,9 +1,9 @@
 use clap::Args;
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct Init {}
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct Add {
     /// Path of the song to add
     #[arg(short, long)]
@@ -42,14 +42,14 @@ pub struct Add {
     pub index: Option<u8>,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct Remove {
     /// Song id to remove
     #[arg(short, long)]
     pub id: String,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct List {
     /// Genre filter
     #[arg(short, long, value_delimiter = ',')]
@@ -84,7 +84,7 @@ pub struct List {
     pub only_show: Option<Vec<String>>,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct ListArtists {
     /// Genre filter
     #[arg(short, long, value_delimiter = ',')]
@@ -99,7 +99,7 @@ pub struct ListArtists {
     pub release: Vec<u32>,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct ListGenres {
     /// Album filter
     #[arg(long, value_delimiter = ',')]
@@ -110,7 +110,7 @@ pub struct ListGenres {
     pub release: Vec<u32>,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct ListAlbums {
     /// Genre filter
     #[arg(short, long, value_delimiter = ',')]
