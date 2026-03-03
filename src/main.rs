@@ -1,15 +1,8 @@
 use std::io;
 
-pub mod commands;
-pub mod library;
-pub mod types;
-
 use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::{Shell, generate};
-use music_manager::{establish_connection, initialise_connection};
-
-use crate::commands::{add_song, list_albums, list_artists, list_genres, list_songs, remove_song};
-
+use music_manager::manager::{commands::*, establish_connection, initialise_connection, types};
 #[derive(Parser)]
 #[command(name = "Music Manager")]
 #[command(about = "A music library manager", long_about = None)]

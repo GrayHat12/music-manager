@@ -3,7 +3,8 @@ use std::{collections::HashMap, usize};
 use diesel::prelude::*;
 use symphonia::core::meta::StandardTagKey;
 
-use crate::schema::{albums, artists, features, genre, images, songs};
+use crate::manager::schema;
+use crate::manager::schema::{albums, artists, features, genre, images, songs};
 
 pub const TAGS: [StandardTagKey; 111] = [
     StandardTagKey::AcoustidFingerprint,
@@ -120,7 +121,7 @@ pub const TAGS: [StandardTagKey; 111] = [
 ];
 
 #[derive(Queryable, Selectable)]
-#[diesel(table_name = crate::schema::images)]
+#[diesel(table_name = schema::images)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 #[diesel(belongs_to(Artist))]
 #[diesel(belongs_to(Song))]
@@ -131,7 +132,7 @@ pub struct CoverImage {
 }
 
 #[derive(Queryable, Selectable)]
-#[diesel(table_name = crate::schema::artists)]
+#[diesel(table_name = schema::artists)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 #[diesel(belongs_to(Album))]
 pub struct Artist {
@@ -142,7 +143,7 @@ pub struct Artist {
 }
 
 #[derive(Queryable, Selectable)]
-#[diesel(table_name = crate::schema::albums)]
+#[diesel(table_name = schema::albums)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Album {
     pub id: i32,
@@ -153,7 +154,7 @@ pub struct Album {
 }
 
 #[derive(Queryable, Selectable)]
-#[diesel(table_name = crate::schema::genre)]
+#[diesel(table_name = schema::genre)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Genre {
     pub id: i32,
@@ -162,7 +163,7 @@ pub struct Genre {
 }
 
 #[derive(Queryable, Selectable)]
-#[diesel(table_name = crate::schema::songs)]
+#[diesel(table_name = schema::songs)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Song {
     pub id: i32,
@@ -179,7 +180,7 @@ pub struct Song {
 }
 
 #[derive(Queryable, Selectable)]
-#[diesel(table_name = crate::schema::songs)]
+#[diesel(table_name = schema::songs)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct SongLite {
     pub id: i32,

@@ -1,12 +1,14 @@
 use std::collections::HashMap;
 use std::io::Read;
 
-use crate::{library, types::*};
 use diesel::SqliteConnection;
 use diesel::prelude::*;
-use music_manager::models::*;
-use music_manager::schema::*;
 use symphonia::core::meta::StandardTagKey;
+
+use crate::manager::models::*;
+use crate::manager::schema::*;
+use crate::manager::types::*;
+use crate::manager::utils::load_song;
 
 fn get_now() -> i32 {
     std::time::SystemTime::now()
@@ -27,8 +29,7 @@ fn tags_map_to_array(tags: HashMap<StandardTagKey, String>) -> [String; 111] {
 }
 
 pub fn add_song(connection: &mut SqliteConnection, command: Add) -> Song {
-    let mut song_data =
-        library::load_song(command.path.clone()).expect("Failed to load song from path");
+    let mut song_data = load_song(command.path.clone()).expect("Failed to load song from path");
 
     // println!("got song {:?}", song_data);
 
