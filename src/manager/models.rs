@@ -281,13 +281,13 @@ impl ToEnum<usize> for StandardTagKey {
 }
 
 impl Song {
-    pub fn from_song_lite(lite: &SongLite, connection: &mut SqliteConnection) -> Self {
+    pub fn from_id(id: i32, connection: &mut SqliteConnection) -> Self {
         songs::table
-            .filter(songs::id.eq(lite.id))
-            .first::<Song>(connection)
+            .filter(songs::id.eq(id))
+            .first(connection)
             .expect("Failed fetching song")
     }
-    pub fn get_metatags(self) -> HashMap<StandardTagKey, String> {
+    pub fn get_metatags(&self) -> HashMap<StandardTagKey, String> {
         let mut tags = HashMap::<StandardTagKey, String>::new();
         let parsed_list: Result<Vec<String>, serde_json::Error> =
             serde_json::from_str(&self.metatags);
@@ -309,7 +309,7 @@ impl Song {
         tags
     }
 
-    pub fn get_artist(self, connection: &mut SqliteConnection) -> Option<Artist> {
+    pub fn get_artist(&self, connection: &mut SqliteConnection) -> Option<Artist> {
         if let Some(id) = self.artist {
             Some(
                 artists::table
@@ -322,7 +322,7 @@ impl Song {
         }
     }
 
-    pub fn get_album(self, connection: &mut SqliteConnection) -> Option<Album> {
+    pub fn get_album(&self, connection: &mut SqliteConnection) -> Option<Album> {
         if let Some(id) = self.album {
             Some(
                 albums::table
@@ -335,7 +335,7 @@ impl Song {
         }
     }
 
-    pub fn get_genre(self, connection: &mut SqliteConnection) -> Option<Genre> {
+    pub fn get_genre(&self, connection: &mut SqliteConnection) -> Option<Genre> {
         if let Some(id) = self.genre {
             Some(
                 genre::table
@@ -348,7 +348,7 @@ impl Song {
         }
     }
 
-    pub fn get_features(self, connection: &mut SqliteConnection) -> Vec<Artist> {
+    pub fn get_features(&self, connection: &mut SqliteConnection) -> Vec<Artist> {
         artists::table
             .filter(
                 artists::id.eq_any(
@@ -363,7 +363,7 @@ impl Song {
             .expect("Error failed fetching artists")
     }
 
-    pub fn get_cover(self, connection: &mut SqliteConnection) -> Option<CoverImage> {
+    pub fn get_cover(&self, connection: &mut SqliteConnection) -> Option<CoverImage> {
         if let Some(id) = self.cover {
             Some(
                 images::table
@@ -378,7 +378,14 @@ impl Song {
 }
 
 impl SongLite {
-    pub fn get_metatags(self) -> HashMap<StandardTagKey, String> {
+    pub fn from_id(id: i32, connection: &mut SqliteConnection) -> Self {
+        songs::table
+            .select(SongLite::as_select())
+            .filter(songs::id.eq(id))
+            .first(connection)
+            .expect("Failed fetching song")
+    }
+    pub fn get_metatags(&self) -> HashMap<StandardTagKey, String> {
         let mut tags = HashMap::<StandardTagKey, String>::new();
         let parsed_list: Result<Vec<String>, serde_json::Error> =
             serde_json::from_str(&self.metatags);
@@ -400,7 +407,7 @@ impl SongLite {
         tags
     }
 
-    pub fn get_artist(self, connection: &mut SqliteConnection) -> Option<Artist> {
+    pub fn get_artist(&self, connection: &mut SqliteConnection) -> Option<Artist> {
         if let Some(id) = self.artist {
             Some(
                 artists::table
@@ -413,7 +420,7 @@ impl SongLite {
         }
     }
 
-    pub fn get_album(self, connection: &mut SqliteConnection) -> Option<Album> {
+    pub fn get_album(&self, connection: &mut SqliteConnection) -> Option<Album> {
         if let Some(id) = self.album {
             Some(
                 albums::table
@@ -426,7 +433,7 @@ impl SongLite {
         }
     }
 
-    pub fn get_genre(self, connection: &mut SqliteConnection) -> Option<Genre> {
+    pub fn get_genre(&self, connection: &mut SqliteConnection) -> Option<Genre> {
         if let Some(id) = self.genre {
             Some(
                 genre::table
@@ -439,7 +446,7 @@ impl SongLite {
         }
     }
 
-    pub fn get_features(self, connection: &mut SqliteConnection) -> Vec<Artist> {
+    pub fn get_features(&self, connection: &mut SqliteConnection) -> Vec<Artist> {
         artists::table
             .filter(
                 artists::id.eq_any(
@@ -454,7 +461,7 @@ impl SongLite {
             .expect("Error failed fetching artists")
     }
 
-    pub fn get_cover(self, connection: &mut SqliteConnection) -> Option<CoverImage> {
+    pub fn get_cover(&self, connection: &mut SqliteConnection) -> Option<CoverImage> {
         if let Some(id) = self.cover {
             Some(
                 images::table
@@ -469,7 +476,13 @@ impl SongLite {
 }
 
 impl Album {
-    pub fn get_cover(self, connection: &mut SqliteConnection) -> Option<CoverImage> {
+    pub fn from_id(id: i32, connection: &mut SqliteConnection) -> Self {
+        albums::table
+            .filter(albums::id.eq(id))
+            .first(connection)
+            .expect("Failed fetching album")
+    }
+    pub fn get_cover(&self, connection: &mut SqliteConnection) -> Option<CoverImage> {
         if let Some(id) = self.image {
             Some(
                 images::table
@@ -484,7 +497,19 @@ impl Album {
 }
 
 impl Artist {
-    pub fn get_cover(self, connection: &mut SqliteConnection) -> Option<CoverImage> {
+    pub fn from_id(id: i32, connection: &mut SqliteConnection) -> Self {
+        artists::table
+            .filter(artists::id.eq(id))
+            .first(connection)
+            .expect("Failed fetching artist")
+    }
+    pub fn from_name(name: String, connection: &mut SqliteConnection) -> Self {
+        artists::table
+            .filter(artists::name.eq(name))
+            .first(connection)
+            .expect("Failed fetching artist")
+    }
+    pub fn get_cover(&self, connection: &mut SqliteConnection) -> Option<CoverImage> {
         if let Some(id) = self.image {
             Some(
                 images::table
@@ -495,5 +520,29 @@ impl Artist {
         } else {
             None
         }
+    }
+}
+
+impl Genre {
+    pub fn from_id(id: i32, connection: &mut SqliteConnection) -> Self {
+        genre::table
+            .filter(genre::id.eq(id))
+            .first(connection)
+            .expect("Failed fetching genre")
+    }
+    pub fn from_name(name: String, connection: &mut SqliteConnection) -> Self {
+        genre::table
+            .filter(genre::name.eq(name))
+            .first(connection)
+            .expect("Failed fetching genre")
+    }
+}
+
+impl CoverImage {
+    pub fn from_id(id: i32, connection: &mut SqliteConnection) -> Self {
+        images::table
+            .filter(images::id.eq(id))
+            .first(connection)
+            .expect("Failed fetching image")
     }
 }
