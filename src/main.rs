@@ -6,12 +6,9 @@ pub mod types;
 
 use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::{Shell, generate};
-use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
-use music_manager::establish_connection;
+use music_manager::{establish_connection, initialise_connection};
 
 use crate::commands::{add_song, list_albums, list_artists, list_genres, list_songs, remove_song};
-
-pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
 
 #[derive(Parser)]
 #[command(name = "Music Manager")]
@@ -73,8 +70,7 @@ fn main() {
     match cli.command {
         Commands::Init(_) => {
             // println!("got init {:#?}", init);
-            connection.run_pending_migrations(MIGRATIONS).unwrap();
-            println!("Database tables initialized successfully.");
+            initialise_connection(&mut connection);
         }
         Commands::Add(add) => {
             // println!("got add {:#?}", add);
