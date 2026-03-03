@@ -125,6 +125,7 @@ pub const TAGS: [StandardTagKey; 111] = [
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 #[diesel(belongs_to(Artist))]
 #[diesel(belongs_to(Song))]
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct CoverImage {
     pub id: i32,
     pub buffer: Vec<u8>,
@@ -135,6 +136,7 @@ pub struct CoverImage {
 #[diesel(table_name = schema::artists)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 #[diesel(belongs_to(Album))]
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct Artist {
     pub id: i32,
     pub name: String,
@@ -145,6 +147,7 @@ pub struct Artist {
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = schema::albums)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct Album {
     pub id: i32,
     pub name: String,
@@ -156,6 +159,7 @@ pub struct Album {
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = schema::genre)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct Genre {
     pub id: i32,
     pub last_updated: i32,
@@ -165,6 +169,7 @@ pub struct Genre {
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = schema::songs)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct Song {
     pub id: i32,
     pub genre: Option<i32>,
@@ -182,6 +187,7 @@ pub struct Song {
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = schema::songs)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct SongLite {
     pub id: i32,
     pub genre: Option<i32>,
