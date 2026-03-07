@@ -45,6 +45,24 @@ diesel::table! {
 }
 
 diesel::table! {
+    playlistref (id) {
+        id -> Integer,
+        song -> Integer,
+        playlist -> Integer,
+        last_updated -> Integer,
+    }
+}
+
+diesel::table! {
+    playlists (id) {
+        id -> Integer,
+        name -> Text,
+        image -> Nullable<Integer>,
+        last_updated -> Integer,
+    }
+}
+
+diesel::table! {
     songs (id) {
         id -> Integer,
         genre -> Nullable<Integer>,
@@ -65,9 +83,21 @@ diesel::joinable!(albums -> images (image));
 diesel::joinable!(artists -> images (image));
 diesel::joinable!(features -> artists (artist));
 diesel::joinable!(features -> songs (song));
+diesel::joinable!(playlistref -> playlists (playlist));
+diesel::joinable!(playlistref -> songs (song));
+diesel::joinable!(playlists -> images (image));
 diesel::joinable!(songs -> albums (album));
 diesel::joinable!(songs -> artists (artist));
 diesel::joinable!(songs -> genre (genre));
 diesel::joinable!(songs -> images (cover));
 
-diesel::allow_tables_to_appear_in_same_query!(albums, artists, features, genre, images, songs,);
+diesel::allow_tables_to_appear_in_same_query!(
+    albums,
+    artists,
+    features,
+    genre,
+    images,
+    playlistref,
+    playlists,
+    songs,
+);

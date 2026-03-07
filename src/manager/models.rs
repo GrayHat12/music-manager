@@ -3,7 +3,7 @@ use std::{collections::HashMap, usize};
 use diesel::prelude::*;
 use symphonia::core::meta::StandardTagKey;
 
-use crate::manager::schema;
+use crate::manager::schema::{self, playlistref, playlists};
 use crate::manager::schema::{albums, artists, features, genre, images, songs};
 
 pub const TAGS: [StandardTagKey; 111] = [
@@ -185,6 +185,28 @@ pub struct Song {
 }
 
 #[derive(Queryable, Selectable)]
+#[diesel(table_name = schema::playlists)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
+pub struct Playlist {
+    pub id: i32,
+    pub name: String,
+    pub image: Option<i32>,
+    pub last_updated: i32,
+}
+
+#[derive(Queryable, Selectable)]
+#[diesel(table_name = schema::playlistref)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
+pub struct PlaylistRef {
+    pub id: i32,
+    pub song: i32,
+    pub playlist: i32,
+    pub last_updated: i32,
+}
+
+#[derive(Queryable, Selectable)]
 #[diesel(table_name = schema::songs)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
@@ -252,6 +274,22 @@ pub struct NewSong {
     pub trackno: Option<i32>,
     pub metatags: String,
     pub buffer: Vec<u8>,
+    pub last_updated: i32,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = playlists)]
+pub struct NewPlaylist {
+    pub name: String,
+    pub image: Option<i32>,
+    pub last_updated: i32,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = playlistref)]
+pub struct SongToPlaylist {
+    pub song: i32,
+    pub playlist: i32,
     pub last_updated: i32,
 }
 

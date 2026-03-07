@@ -1,0 +1,9 @@
+CREATE TABLE playlistref (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  song INTEGER NOT NULL,
+  playlist INTEGER NOT NULL,
+  last_updated INTEGER NOT NULL,
+  FOREIGN KEY(playlist) REFERENCES playlists(id),
+  FOREIGN KEY(song) REFERENCES songs(id),
+  CONSTRAINT UQ_playlist_song UNIQUE (playlist, song)
+)
