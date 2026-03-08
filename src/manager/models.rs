@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::usize;
 
 use diesel::prelude::*;
@@ -484,6 +485,29 @@ impl Song {
             },
             Err(e) => Err(e),
         }
+    }
+
+    // meta tags
+    pub fn get_metatags(&self) -> HashMap<StandardTagKey, String> {
+        let mut tags = HashMap::<StandardTagKey, String>::new();
+        let parsed_list: Result<Vec<String>, serde_json::Error> =
+            serde_json::from_str(&self.metatags);
+
+        match parsed_list {
+            Ok(list) => {
+                for (index, value) in list.iter().enumerate() {
+                    match StandardTagKey::to_enum(index) {
+                        Some(enm) => match tags.insert(enm, value.clone()) {
+                            Some(_) => {}
+                            None => {}
+                        },
+                        None => {}
+                    };
+                }
+            }
+            Err(_) => {}
+        };
+        tags
     }
 }
 
