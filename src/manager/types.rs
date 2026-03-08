@@ -46,7 +46,7 @@ pub struct Add {
 pub struct Remove {
     /// Song id to remove
     #[arg(short, long)]
-    pub id: String,
+    pub id: i32,
 }
 
 #[derive(Args, Debug, serde::Serialize, serde::Deserialize, Clone)]
@@ -82,6 +82,10 @@ pub struct List {
     /// only shows these fields
     #[arg(short, long, value_delimiter = ',', default_values=&["id", "genre", "artist", "features", "album", "index", "title", "release"])]
     pub only_show: Option<Vec<String>>,
+
+    /// playlist filter
+    #[arg(short, long, value_delimiter = ',')]
+    pub playlists: Vec<String>,
 }
 
 #[derive(Args, Debug, serde::Serialize, serde::Deserialize, Clone)]

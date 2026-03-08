@@ -10,8 +10,8 @@ CREATE TABLE songs (
   metatags TEXT NOT NULL,
   buffer BLOB NOT NULL UNIQUE,
   last_updated INTEGER NOT NULL,
-  FOREIGN KEY(genre) REFERENCES genre(id),
-  FOREIGN KEY(artist) REFERENCES artists(id),
-  FOREIGN KEY(album) REFERENCES albums(id),
-  FOREIGN KEY(cover) REFERENCES images(id)
+  FOREIGN KEY(genre) REFERENCES genre(id) ON DELETE SET NULL,
+  FOREIGN KEY(artist) REFERENCES artists(id) ON DELETE SET NULL,
+  FOREIGN KEY(album) REFERENCES albums(id) ON DELETE SET NULL,
+  FOREIGN KEY(cover) REFERENCES images(id) ON DELETE SET NULL
 )

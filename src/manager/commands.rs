@@ -6,16 +6,15 @@ use diesel::prelude::*;
 use symphonia::core::meta::StandardTagKey;
 
 use crate::manager::models::*;
-use crate::manager::schema::*;
+use crate::manager::schema::albums;
+use crate::manager::schema::artists;
+use crate::manager::schema::features;
+use crate::manager::schema::genre;
+use crate::manager::schema::playlistref;
+use crate::manager::schema::playlists;
+use crate::manager::schema::songs;
 use crate::manager::types::*;
 use crate::manager::utils::load_song;
-
-fn get_now() -> i32 {
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_secs() as i32
-}
 
 fn tags_map_to_array(tags: HashMap<StandardTagKey, String>) -> [String; 111] {
     let mut values: [String; 111] = core::array::from_fn(|_| "".to_string());
@@ -55,76 +54,44 @@ pub fn add_song(connection: &mut SqliteConnection, command: Add) -> Song {
         song_data.features = command.features;
     }
 
-    let genre_id: Option<i32> = song_data.genre.map(|name| {
-        diesel::insert_into(genre::table)
-            .values((genre::name.eq(&name), genre::last_updated.eq(get_now())))
-            .on_conflict(genre::name)
-            .do_nothing()
-            .execute(connection)
-            .expect("failed genre insert");
-        genre::table
-            .filter(genre::name.eq(name))
-            .select(genre::id)
-            .first::<i32>(connection)
-            .expect("failed genre fetch")
-    });
+    let genre_id = match song_data.genre {
+        Some(name) => Some(Genre::new(connection, &name).id),
+        None => None,
+    };
 
-    let artist_id = song_data.artist.map(|name| {
-        diesel::insert_into(artists::table)
-            .values((artists::name.eq(&name), artists::last_updated.eq(get_now())))
-            .on_conflict(artists::name)
-            .do_nothing()
-            .execute(connection)
-            .expect("failed artist insert");
-        artists::table
-            .filter(artists::name.eq(name))
-            .select(artists::id)
-            .first::<i32>(connection)
-            .expect("failed artist fetch")
-    });
+    let artist_id = match song_data.artist {
+        Some(name) => match Artist::from_name(connection, &name) {
+            Ok(artist) => Some(artist.id),
+            Err(_) => None,
+        },
+        None => None,
+    };
 
-    let album_id = song_data.album.map(|name| {
-        diesel::insert_into(albums::table)
-            .values((
-                albums::name.eq(&name),
-                albums::artist.eq(artist_id.unwrap_or(0)),
-                albums::last_updated.eq(get_now()),
-            ))
-            .on_conflict((albums::name, albums::artist))
-            .do_nothing()
-            .execute(connection)
-            .expect("failed album insert");
-        albums::table
-            .filter(albums::name.eq(name))
-            .select(albums::id)
-            .first::<i32>(connection)
-            .expect("failed album fetch")
-    });
+    let album_id = match song_data.album {
+        Some(album_name) => match artist_id {
+            Some(id) => match Artist::from_id(connection, id) {
+                Ok(artist) => match Album::from_name(connection, &album_name, &artist.name) {
+                    Ok(album) => Some(album.id),
+                    Err(_) => None,
+                },
+                Err(_) => None,
+            },
+            None => None,
+        },
+        None => None,
+    };
 
     let mut features = Vec::new();
 
     for feature in song_data.features {
-        features.push({
-            diesel::insert_into(artists::table)
-                .values((
-                    artists::name.eq(&feature),
-                    artists::last_updated.eq(get_now()),
-                ))
-                .on_conflict(artists::name)
-                .do_nothing()
-                .execute(connection)
-                .expect("failed artist insert");
-            artists::table
-                .filter(artists::name.eq(feature))
-                .select(artists::id)
-                .first::<i32>(connection)
-                .expect("failed artist fetch")
-        });
+        match Artist::from_name(connection, &feature) {
+            Ok(artist) => features.push(artist.id),
+            Err(_) => (),
+        };
     }
 
     let tags_array = tags_map_to_array(song_data.tags).to_vec();
 
-    // 4. Final Song Insertion
     let mut new_song = NewSong {
         genre: genre_id,
         artist: artist_id,
@@ -145,69 +112,22 @@ pub fn add_song(connection: &mut SqliteConnection, command: Add) -> Song {
         let mut src = std::fs::File::open(image_path).expect("failed to open image path");
         let mut buffer = Vec::new();
         src.read_to_end(&mut buffer).expect("Failed reading file");
-
-        new_song.cover = Some({
-            let id = diesel::insert_into(images::table)
-                .values(NewImage {
-                    buffer,
-                    last_updated: get_now(),
-                })
-                .returning(images::id)
-                .on_conflict(images::buffer)
-                .do_nothing()
-                .get_result::<i32>(connection)
-                .expect("failed image insert");
-            images::table
-                .filter(images::id.eq(id))
-                .select(images::id)
-                .first::<i32>(connection)
-                .expect("failed album fetch")
-        });
+        new_song.cover = Some(CoverImage::new(connection, &buffer).id);
     }
 
     println!("adding song");
 
-    let songid = diesel::insert_into(songs::table)
-        .values(&new_song)
-        .returning(songs::id)
-        .get_result(connection)
-        .expect("Error saving song to database");
+    let song = Song::new(connection, &new_song);
 
-    for feature in features {
-        diesel::insert_into(features::table)
-            .values(NewFeature {
-                artist: feature,
-                song: songid,
-                last_updated: get_now(),
-            })
-            .on_conflict((features::artist, features::song))
-            .do_nothing()
-            .execute(connection)
-            .expect("failed feature insert");
-    }
+    _ = song.add_features(connection, &features);
 
-    let song: Song = songs::table
-        .filter(songs::id.eq(songid))
-        .first::<Song>(connection)
-        .expect("Error fething song");
-
-    println!("Successfully added: {}", new_song.title);
+    println!("Successfully added: {}", song.title);
 
     return song;
 }
 
-pub fn remove_song(connection: &mut SqliteConnection, command: Remove) -> String {
-    let id_int = command.id.parse::<i32>().expect("ID must be an integer");
-    let title = diesel::delete(songs::table.filter(songs::id.eq(id_int)))
-        .returning(songs::title)
-        .get_result::<String>(connection)
-        .expect("Error deleting song");
-    println!("Removed song ID: {} {}", id_int, title);
-    return title;
-}
-
-pub fn list_songs(connection: &mut SqliteConnection, command: List) -> Vec<SongLite> {
-    let mut query = songs::table.into_boxed().select(SongLite::as_select());
+pub fn list_songs(connection: &mut SqliteConnection, command: List) -> Vec<Song> {
+    let mut query = songs::table.into_boxed().select(Song::as_select());
 
     if !command.title.is_empty() {
         for pattern in command.title {
@@ -254,6 +174,23 @@ pub fn list_songs(connection: &mut SqliteConnection, command: List) -> Vec<SongL
         query = query.filter(songs::id.eq_any(featureids));
     }
 
+    if !command.playlists.is_empty() {
+        let mut playlist_query = playlists::table.into_boxed().select(playlists::id);
+        for playlist in command.playlists {
+            playlist_query = playlist_query.filter(playlists::name.like(playlist));
+        }
+        let playlistids = playlist_query
+            .load::<i32>(connection)
+            .expect("Error fetching playlists");
+        let songids = playlistref::table
+            .into_boxed()
+            .select(playlistref::song)
+            .filter(playlistref::playlist.eq_any(playlistids))
+            .load::<i32>(connection)
+            .expect("Error fetching playlist ref ids");
+        query = query.filter(songs::id.eq_any(songids));
+    }
+
     if !command.album.is_empty() {
         let mut album_query = albums::table.into_boxed().select(albums::id);
         for album in command.album {
@@ -273,12 +210,7 @@ pub fn list_songs(connection: &mut SqliteConnection, command: List) -> Vec<SongL
         query = query.filter(songs::trackno.eq_any(command.index.iter().map(|x| *x as i32)));
     }
 
-    let results = query
-        .load::<SongLite>(connection)
-        .expect("Error loading songs");
-    for s in &results {
-        println!("{}: {}", s.id, s.title);
-    }
+    let results = query.load::<Song>(connection).expect("Error loading songs");
     return results;
 }
 

@@ -2,7 +2,9 @@ use std::io;
 
 use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::{Shell, generate};
-use music_manager::manager::{commands::*, establish_connection, initialise_connection, types};
+use music_manager::manager::{
+    commands::*, establish_connection, initialise_connection, models::Song, types,
+};
 #[derive(Parser)]
 #[command(name = "Music Manager")]
 #[command(about = "A music library manager", long_about = None)]
@@ -71,11 +73,16 @@ fn main() {
         }
         Commands::Remove(remove) => {
             // println!("got remove {:#?}", remove);
-            remove_song(&mut connection, remove);
+            match Song::delete(&mut connection, remove.id) {
+                Ok(count) => println!("removed {:#?} songs", count),
+                Err(e) => println!("Error {:?}", e),
+            }
         }
         Commands::List(list) => {
             // println!("got list {:#?}", list);
-            list_songs(&mut connection, list);
+            for song in list_songs(&mut connection, list) {
+                println!("{:?}", song.title);
+            }
         }
         Commands::ListArtists(list) => {
             // println!("got list_artists {:#?}", list);

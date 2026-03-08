@@ -3,7 +3,7 @@ CREATE TABLE features (
   artist INTEGER NOT NULL,
   song INTEGER NOT NULL,
   last_updated INTEGER NOT NULL,
-  FOREIGN KEY(artist) REFERENCES artists(id),
-  FOREIGN KEY(song) REFERENCES songs(id),
+  FOREIGN KEY(artist) REFERENCES artists(id) ON DELETE CASCADE,
+  FOREIGN KEY(song) REFERENCES songs(id) ON DELETE CASCADE,
   CONSTRAINT UQ_artist_song UNIQUE (artist, song)
 )

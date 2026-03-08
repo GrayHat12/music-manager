@@ -18,5 +18,8 @@ pub fn establish_connection(db_path: String) -> SqliteConnection {
 }
 
 pub fn initialise_connection(connection: &mut SqliteConnection) {
+    diesel::sql_query("PRAGMA foreign_keys = ON;")
+        .execute(connection)
+        .ok();
     connection.run_pending_migrations(MIGRATIONS).unwrap();
 }

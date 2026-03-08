@@ -3,5 +3,5 @@ CREATE TABLE artists (
   name VARCHAR NOT NULL UNIQUE,
   image INTEGER NULL,
   last_updated INTEGER NOT NULL,
-  FOREIGN KEY (image) REFERENCES images(id)
+  FOREIGN KEY (image) REFERENCES images(id) ON DELETE SET NULL
 )

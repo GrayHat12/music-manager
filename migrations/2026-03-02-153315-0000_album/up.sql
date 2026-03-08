@@ -4,7 +4,7 @@ CREATE TABLE albums (
   image INTEGER NULL,
   artist INTEGER NOT NULL,
   last_updated INTEGER NOT NULL,
-  FOREIGN KEY (image) REFERENCES images(id),
-  FOREIGN KEY (artist) REFERENCES artists(id),
+  FOREIGN KEY (image) REFERENCES images(id) ON DELETE SET NULL,
+  FOREIGN KEY (artist) REFERENCES artists(id) ON DELETE CASCADE,
   CONSTRAINT UQ_artist_album UNIQUE (artist, name)
 )

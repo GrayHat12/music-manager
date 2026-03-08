@@ -3,7 +3,7 @@ CREATE TABLE playlistref (
   song INTEGER NOT NULL,
   playlist INTEGER NOT NULL,
   last_updated INTEGER NOT NULL,
-  FOREIGN KEY(playlist) REFERENCES playlists(id),
-  FOREIGN KEY(song) REFERENCES songs(id),
+  FOREIGN KEY(playlist) REFERENCES playlists(id) ON DELETE CASCADE,
+  FOREIGN KEY(song) REFERENCES songs(id) ON DELETE CASCADE,
   CONSTRAINT UQ_playlist_song UNIQUE (playlist, song)
 )
