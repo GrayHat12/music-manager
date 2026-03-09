@@ -325,7 +325,8 @@ impl Song {
                 songs::last_updated.eq(&song.last_updated),
             ))
             .on_conflict(songs::buffer)
-            .do_nothing()
+            .do_update()
+            .set(songs::last_updated.eq(get_now()))
             .returning(Song::as_returning())
             .get_result(connection)
             .expect("failed song insert")
@@ -360,7 +361,8 @@ impl Song {
                     last_updated: get_now(),
                 })
                 .on_conflict((features::artist, features::song))
-                .do_nothing()
+                .do_update()
+                .set(features::last_updated.eq(get_now()))
                 .execute(connection)?;
         }
         Ok(self.get_features(connection))
@@ -521,7 +523,8 @@ impl Album {
                 albums::last_updated.eq(new_album.last_updated),
             ))
             .on_conflict((albums::name, albums::artist))
-            .do_nothing()
+            .do_update()
+            .set(albums::last_updated.eq(get_now()))
             .returning(Album::as_returning())
             .get_result(connection)
             .expect("failed album insert")
@@ -599,7 +602,8 @@ impl Artist {
                 artists::last_updated.eq(new_artist.last_updated),
             ))
             .on_conflict(artists::name)
-            .do_nothing()
+            .do_update()
+            .set(artists::last_updated.eq(get_now()))
             .returning(Artist::as_returning())
             .get_result(connection)
             .expect("failed artist insert")
@@ -671,7 +675,8 @@ impl Genre {
         diesel::insert_into(genre::table)
             .values((genre::name.eq(name), genre::last_updated.eq(get_now())))
             .on_conflict(genre::name)
-            .do_nothing()
+            .do_update()
+            .set(genre::last_updated.eq(get_now()))
             .returning(Genre::as_returning())
             .get_result(connection)
             .expect("failed genre insert")
@@ -722,7 +727,8 @@ impl CoverImage {
                 images::last_updated.eq(get_now()),
             ))
             .on_conflict(images::buffer)
-            .do_nothing()
+            .do_update()
+            .set(images::last_updated.eq(get_now()))
             .returning(CoverImage::as_returning())
             .get_result(connection)
             .expect("failed image insert")
@@ -764,7 +770,9 @@ impl Playlist {
     pub fn new(connection: &mut SqliteConnection, new_playlist: &NewPlaylist) -> Self {
         diesel::insert_into(playlists::table)
             .values(new_playlist)
-            .on_conflict_do_nothing()
+            .on_conflict(playlists::name)
+            .do_update()
+            .set(playlists::last_updated.eq(get_now()))
             .returning(Playlist::as_returning())
             .get_result(connection)
             .expect("failed inserting to playlist")
@@ -788,7 +796,9 @@ impl Playlist {
                 playlist: self.id,
                 last_updated: get_now(),
             })
-            .on_conflict_do_nothing()
+            .on_conflict((playlistref::song, playlistref::playlist))
+            .do_update()
+            .set(playlistref::last_updated.eq(get_now()))
             .execute(connection)?;
         Ok(self)
     }
